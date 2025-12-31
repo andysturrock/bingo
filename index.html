@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Modern Bingo Number Caller - Generate random bingo numbers with traditional call names">
+  <title>Bingo Number Caller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- React and ReactDOM from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone for JSX/TSX compilation in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Inlined Application Code to avoid CORS issues with file:// protocol -->
+  <script type="text/babel">
+    // Bingo call names for numbers 1-90
+    const bingoCallNames = {
+      1: "Kelly's Eye", 2: "One Little Duck", 3: "Cup of Tea", 4: "Knock at the Door",
+      5: "Man Alive", 6: "Tom Mix", 7: "Lucky Seven", 8: "Garden Gate",
+      9: "Doctor's Orders", 10: "Boris's Den", 11: "Legs Eleven", 12: "One Dozen",
+      13: "Unlucky for Some", 14: "Valentine's Day", 15: "Young and Keen", 16: "Sweet Sixteen",
+      17: "Dancing Queen", 18: "Coming of Age", 19: "Goodbye Teens", 20: "One Score",
+      21: "Key of the Door", 22: "Two Little Ducks", 23: "Thee and Me", 24: "Two Dozen",
+      25: "Duck and Dive", 26: "Pick and Mix", 27: "Gateway to Heaven", 28: "In a State",
+      29: "Rise and Shine", 30: "Dirty Gertie", 31: "Get Up and Run", 32: "Buckle My Shoe",
+      33: "All the Threes", 34: "Ask for More", 35: "Jump and Jive", 36: "Three Dozen",
+      37: "More than Eleven", 38: "Christmas Cake", 39: "Steps", 40: "Life Begins",
+      41: "Time for Fun", 42: "Winnie the Pooh", 43: "Down on Your Knees", 44: "Droopy Drawers",
+      45: "Halfway There", 46: "Up to Tricks", 47: "Four and Seven", 48: "Four Dozen",
+      49: "PC", 50: "Half a Century", 51: "Tweak of the Thumb", 52: "Danny La Rue",
+      53: "Stuck in a Tree", 54: "Clean the Floor", 55: "Snakes Alive", 56: "Shotts Bus",
+      57: "Heinz Varieties", 58: "Make Them Wait", 59: "Brighton Line", 60: "Five Dozen",
+      61: "Baker's Bun", 62: "Turn on the Screw", 63: "Tickle Me 63", 64: "Red Raw",
+      65: "Old Age Pension", 66: "Clickety Click", 67: "Made in Heaven", 68: "Saving Grace",
+      69: "Either Way UP", 70: "Three Score and Ten", 71: "Bang on the Drum", 72: "Six Dozen",
+      73: "Queen B", 74: "Candy Store", 75: "Strive and Strive", 76: "Trombones",
+      77: "Sunset Strip", 78: "Heaven's Gate", 79: "One More Time", 80: "Eight and Blank",
+      81: "Stop and Run", 82: "Straight On Through", 83: "Time for Tea", 84: "Seven Dozen",
+      85: "Staying Alive", 86: "Between the Sticks", 87: "Torquay in Devon", 88: "Two Fat Ladies",
+      89: "Nearly There", 90: "Top of the Shop"
+    };
+
+    const generateNextNumber = (calledNumbers, maxNumber) => {
+      const availableNumbers = Array.from({ length: maxNumber }, (_, i) => i + 1)
+        .filter(num => !calledNumbers.includes(num));
+
+      if (availableNumbers.length === 0) return null;
+
+      const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+      return availableNumbers[randomIndex];
+    };
+
+    const getBingoCallName = (number) => bingoCallNames[number] || "";
+
+    const { useState, useEffect } = React;
+
+    const NumberDisplay = ({ currentNumber, callName }) => (
+      <div className="number-display">
+        <div className="number-display-label">Current Number</div>
+        {currentNumber ? (
+          <React.Fragment>
+            <div className="current-number" key={currentNumber}>{currentNumber}</div>
+            <div className="call-name" key={`${currentNumber}-name`}>{callName}</div>
+          </React.Fragment>
+        ) : (
+          <div className="placeholder-text">Click "Next Number" to start!</div>
+        )}
+      </div>
+    );
+
+    const NextButton = ({ onClick, disabled }) => (
+      <button className="next-button" onClick={onClick} disabled={disabled}>
+        {disabled ? "All Numbers Called!" : "Next Number"}
+      </button>
+    );
+
+    const ResetButton = ({ onClick, style, label }) => (
+      <button className="reset-button" onClick={onClick} style={style}>
+        {label || "Reset Game"}
+      </button>
+    );
+
+    const NumberGrid = ({ calledNumbers, maxNumber }) => {
+      // Adjust grid columns based on maxNumber for better layout
+      const gridStyle = {
+        gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(maxNumber))}, 1fr)`
+      };
+
+      return (
+        <div className="number-grid-container">
+          <h2 className="number-grid-title">Numbers Board (1-{maxNumber})</h2>
+          <div className="number-grid" style={gridStyle}>
+            {Array.from({ length: maxNumber }, (_, i) => i + 1).map(num => (
+              <div
+                key={num}
+                className={`number-cell ${calledNumbers.includes(num) ? 'called' : ''}`}
+              >
+                {num}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const SettingsPanel = ({ maxNumber, onMaxNumberChange }) => (
+      <div className="settings-panel">
+        <label className="settings-label">
+          Max Number:
+          <input
+            type="number"
+            min="10"
+            max="90"
+            value={maxNumber}
+            onChange={(e) => onMaxNumberChange(parseInt(e.target.value) || 50)}
+            className="settings-input"
+          />
+        </label>
+      </div>
+    );
+
+    const BingoCardGenerator = ({ maxNumber }) => {
+      const [cardNumbers, setCardNumbers] = useState([]);
+
+      const generateColumnNumbers = (min, max, count) => {
+        const nums = [];
+        const available = [];
+        for (let i = min; i <= max; i++) available.push(i);
+
+        if (available.length < count) {
+          // Not enough unique numbers, fill with what we have
+          return available;
+        }
+
+        for (let i = 0; i < count; i++) {
+          const randomIndex = Math.floor(Math.random() * available.length);
+          nums.push(available[randomIndex]);
+          available.splice(randomIndex, 1);
+        }
+        return nums.sort((a, b) => a - b);
+      };
+
+      const generateCard = () => {
+        const totalCols = 5;
+        const rangeSize = Math.floor(maxNumber / totalCols);
+
+        const newCard = [
+          generateColumnNumbers(1, rangeSize, 5),
+          generateColumnNumbers(rangeSize + 1, rangeSize * 2, 5),
+          generateColumnNumbers(rangeSize * 2 + 1, rangeSize * 3, 4), // 4 for center col
+          generateColumnNumbers(rangeSize * 3 + 1, rangeSize * 4, 5),
+          generateColumnNumbers(rangeSize * 4 + 1, maxNumber, 5),
+        ];
+
+        // Insert Free Space
+        const col3 = newCard[2];
+        if (col3.length >= 2) {
+          // Ensure we have enough numbers before splicing
+          newCard[2] = [col3[0], col3[1], "FREE", col3[2], col3[3]];
+        } else {
+          // Fallback for very small ranges (unlikely cases)
+          newCard[2] = ["FREE"];
+        }
+
+        setCardNumbers(newCard);
+      };
+
+      useEffect(() => {
+        generateCard();
+      }, [maxNumber]);
+
+      return (
+        <div className="bingo-card-container">
+          <div className="bingo-card-header">
+            <h2>BINGO (1-{maxNumber})</h2>
+          </div>
+          <div className="bingo-card-grid">
+            {Array.from({ length: 5 }).map((_, rowIndex) => (
+              cardNumbers.length > 0 && cardNumbers.map((col, colIndex) => (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className={`bingo-card-cell ${rowIndex === 2 && colIndex === 2 ? 'free-space' : ''}`}
+                >
+                  {col ? col[rowIndex] : ''}
+                </div>
+              ))
+            ))}
+          </div>
+
+          <div className="bingo-card-actions">
+            <ResetButton onClick={generateCard} label="New Card" style={{ background: 'rgba(0,0,0,0.1)', color: 'black', border: '1px solid #ccc' }} />
+            <button className="next-button" onClick={() => window.print()} style={{ minWidth: 'auto' }}>
+              Print Card
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [maxNumber, setMaxNumber] = useState(50);
+      const [currentNumber, setCurrentNumber] = useState(null);
+      const [callName, setCallName] = useState("");
+      const [calledNumbers, setCalledNumbers] = useState([]);
+      const [gameComplete, setGameComplete] = useState(false);
+      const [activeTab, setActiveTab] = useState('caller');
+
+      const handleMaxNumberChange = (newMax) => {
+        const clamped = Math.max(10, Math.min(90, newMax));
+        setMaxNumber(clamped);
+        handleReset();
+      };
+
+      const handleNextNumber = () => {
+        const nextNum = generateNextNumber(calledNumbers, maxNumber);
+
+        if (nextNum !== null) {
+          setCurrentNumber(nextNum);
+          setCallName(getBingoCallName(nextNum));
+          setCalledNumbers(prev => [...prev, nextNum]);
+
+          if (calledNumbers.length + 1 === maxNumber) {
+            setGameComplete(true);
+          }
+        }
+      };
+
+      const handleReset = () => {
+        setCurrentNumber(null);
+        setCallName("");
+        setCalledNumbers([]);
+        setGameComplete(false);
+      };
+
+      return (
+        <div className="app-container">
+          <div className="header-controls">
+            <div className="tab-nav">
+              <button
+                className={`tab-button ${activeTab === 'caller' ? 'active' : ''}`}
+                onClick={() => setActiveTab('caller')}
+              >
+                Number Caller
+              </button>
+              <button
+                className={`tab-button ${activeTab === 'card' ? 'active' : ''}`}
+                onClick={() => setActiveTab('card')}
+              >
+                Printable Card
+              </button>
+            </div>
+            <SettingsPanel maxNumber={maxNumber} onMaxNumberChange={handleMaxNumberChange} />
+          </div>
+
+          {activeTab === 'caller' ? (
+            <div className="game-container">
+              <div className="main-area">
+                <NumberDisplay currentNumber={currentNumber} callName={callName} />
+                <div className="button-container">
+                  <NextButton onClick={handleNextNumber} disabled={gameComplete} />
+                  {calledNumbers.length > 0 && <ResetButton onClick={handleReset} />}
+                </div>
+                {gameComplete && (
+                  <div className="game-complete">
+                    <h2>🎉 All Numbers Called! 🎉</h2>
+                    <p>Click "Reset Game" to start over</p>
+                  </div>
+                )}
+              </div>
+              <div className="sidebar" style={{ overflowY: 'auto', maxHeight: '80vh' }}>
+                <NumberGrid calledNumbers={calledNumbers} maxNumber={maxNumber} />
+              </div>
+            </div>
+          ) : (
+            <BingoCardGenerator maxNumber={maxNumber} />
+          )}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+
+</html>
