@@ -78,6 +78,9 @@ body {
   padding: var(--spacing-sm) var(--spacing-md);
   border-radius: var(--radius-full);
   backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .settings-label {
@@ -300,10 +303,63 @@ body {
   color: var(--text-primary);
 }
 
-.number-grid {
+.bingo-board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.board-headers {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--spacing-xs);
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--dark-bg);
+  padding-bottom: 8px;
+}
+
+.board-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.board-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+}
+
+.board-row.row-filled {
+  background: rgba(79, 172, 254, 0.1);
+  box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+}
+
+.column-header {
+  background: var(--primary-gradient);
+  color: white;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  font-size: 1.25rem;
+  box-shadow: var(--shadow-glow);
+  transition: all 0.3s ease;
+}
+
+.column-header.all-called {
+  background: var(--success-gradient);
+  transform: scale(1.05);
+}
+
+.number-cell.empty {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .number-cell {
@@ -485,7 +541,6 @@ body {
   gap: 2px;
   background: #333;
   border: 4px solid #333;
-  aspect-ratio: 1;
 }
 
 .bingo-card-cell {
@@ -564,5 +619,61 @@ body {
 
   .bingo-card-cell {
     font-size: 2.5rem;
+  }
+}
+
+/* History Section */
+.history-container {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(10px);
+}
+
+.history-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
+
+.history-list {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: center;
+}
+
+.history-item {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
