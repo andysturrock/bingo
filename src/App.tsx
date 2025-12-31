@@ -53,6 +53,23 @@ const NumberDisplay: React.FC<{ currentNumber: number | null, callName: string }
   </div>
 );
 
+const HistoryDisplay: React.FC<{ history: number[] }> = ({ history }) => {
+  if (history.length === 0) return null;
+
+  return (
+    <div className="history-container">
+      <div className="history-label">Previous Numbers</div>
+      <div className="history-list">
+        {history.slice(0, 5).map((num, i) => (
+          <div key={`${num}-${i}`} className="history-item">
+            {num}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const NextButton: React.FC<{ onClick: () => void, disabled: boolean }> = ({ onClick, disabled }) => (
   <button className="next-button" onClick={onClick} disabled={disabled}>
     {disabled ? "All Numbers Called!" : "Next Number"}
@@ -66,45 +83,113 @@ const ResetButton: React.FC<{ onClick: () => void, style?: React.CSSProperties, 
 );
 
 const NumberGrid: React.FC<{ calledNumbers: number[], maxNumber: number }> = ({ calledNumbers, maxNumber }) => {
-  const gridStyle = {
-    gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(maxNumber))}, 1fr)`
+  const totalCols = 5;
+  const headers = ['B', 'I', 'N', 'G', 'O'];
+  const numbersPerCol = Math.ceil(maxNumber / totalCols);
+
+  const getNumber = (row: number, col: number) => {
+    const num = col * numbersPerCol + row + 1;
+    return num <= maxNumber ? num : null;
+  };
+
+  const isRowFilled = (row: number) => {
+    for (let col = 0; col < totalCols; col++) {
+      const num = getNumber(row, col);
+      if (num && !calledNumbers.includes(num)) return false;
+    }
+    return true;
   };
 
   return (
     <div className="number-grid-container">
-      <h2 className="number-grid-title">Numbers Board (1-{maxNumber})</h2>
-      <div className="number-grid" style={gridStyle}>
-        {Array.from({ length: maxNumber }, (_, i) => i + 1).map(num => (
-          <div
-            key={num}
-            className={`number-cell ${calledNumbers.includes(num) ? 'called' : ''}`}
-          >
-            {num}
-          </div>
-        ))}
+      <h2 className="number-grid-title">Numbers Board</h2>
+      <div className="bingo-board">
+        <div className="board-headers">
+          {headers.map(h => {
+            const colIndex = headers.indexOf(h);
+            const colStart = colIndex * numbersPerCol + 1;
+            const colEnd = Math.min((colIndex + 1) * numbersPerCol, maxNumber);
+            const allInColCalled = Array.from({ length: colEnd - colStart + 1 }, (_, i) => colStart + i)
+              .every(n => calledNumbers.includes(n));
+            return (
+              <div key={h} className={`column-header ${allInColCalled ? 'all-called' : ''}`}>
+                {h}
+              </div>
+            );
+          })}
+        </div>
+        <div className="board-body">
+          {Array.from({ length: numbersPerCol }).map((_, rowIndex) => {
+            const rowFilled = isRowFilled(rowIndex);
+            return (
+              <div key={rowIndex} className={`board-row ${rowFilled ? 'row-filled' : ''}`}>
+                {Array.from({ length: totalCols }).map((_, colIndex) => {
+                  const num = getNumber(rowIndex, colIndex);
+                  return (
+                    <div
+                      key={colIndex}
+                      className={`number-cell ${num && calledNumbers.includes(num) ? 'called' : ''} ${!num ? 'empty' : ''}`}
+                    >
+                      {num}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
 
-const SettingsPanel: React.FC<{ maxNumber: number, onMaxNumberChange: (newMax: number) => void }> = ({ maxNumber, onMaxNumberChange }) => (
-  <div className="settings-panel">
-    <label className="settings-label">
-      Max Number:
-      <input
-        type="number"
-        min="10"
-        max="90"
-        value={maxNumber}
-        onChange={(e) => onMaxNumberChange(parseInt(e.target.value) || 50)}
-        className="settings-input"
-      />
-    </label>
-  </div>
-);
+const SettingsPanel: React.FC<{
+  maxNumber: number,
+  onMaxNumberChange: (newMax: number) => void
+}> = ({ maxNumber, onMaxNumberChange }) => {
+  const [localValue, setLocalValue] = useState(maxNumber.toString());
+
+  useEffect(() => {
+    setLocalValue(maxNumber.toString());
+  }, [maxNumber]);
+
+  const handleApply = () => {
+    const val = parseInt(localValue);
+    if (!isNaN(val)) {
+      onMaxNumberChange(val);
+    } else {
+      setLocalValue(maxNumber.toString());
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  return (
+    <div className="settings-panel">
+      <label className="settings-label">
+        Max Number:
+        <input
+          type="number"
+          min="10"
+          max="90"
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
+          onBlur={handleApply}
+          onKeyDown={handleKeyDown}
+          className="settings-input"
+        />
+      </label>
+    </div>
+  );
+};
 
 const BingoCardGenerator: React.FC<{ maxNumber: number }> = ({ maxNumber }) => {
   const [cardNumbers, setCardNumbers] = useState<(number | string)[][]>([]);
+  const rows = Math.max(1, Math.floor(maxNumber / 10));
 
   const generateColumnNumbers = (min: number, max: number, count: number) => {
     const nums: number[] = [];
@@ -126,20 +211,25 @@ const BingoCardGenerator: React.FC<{ maxNumber: number }> = ({ maxNumber }) => {
   const generateCard = () => {
     const totalCols = 5;
     const rangeSize = Math.floor(maxNumber / totalCols);
+    const hasFreeSpace = rows % 2 !== 0 && rows >= 3;
 
     const newCard = [
-      generateColumnNumbers(1, rangeSize, 5),
-      generateColumnNumbers(rangeSize + 1, rangeSize * 2, 5),
-      generateColumnNumbers(rangeSize * 2 + 1, rangeSize * 3, 4), // 4 for center col
-      generateColumnNumbers(rangeSize * 3 + 1, rangeSize * 4, 5),
-      generateColumnNumbers(rangeSize * 4 + 1, maxNumber, 5),
+      generateColumnNumbers(1, rangeSize, rows),
+      generateColumnNumbers(rangeSize + 1, rangeSize * 2, rows),
+      generateColumnNumbers(rangeSize * 2 + 1, rangeSize * 3, hasFreeSpace ? rows - 1 : rows),
+      generateColumnNumbers(rangeSize * 3 + 1, rangeSize * 4, rows),
+      generateColumnNumbers(rangeSize * 4 + 1, maxNumber, rows),
     ] as (number | string)[][];
 
-    const col3 = newCard[2];
-    if (col3.length >= 2) {
-      newCard[2] = [col3[0], col3[1], "FREE", col3[2], col3[3]];
-    } else {
-      newCard[2] = ["FREE"];
+    if (hasFreeSpace) {
+      const col3 = newCard[2] as number[];
+      const middleIndex = Math.floor(rows / 2);
+      const withFree = [
+        ...col3.slice(0, middleIndex),
+        "FREE",
+        ...col3.slice(middleIndex)
+      ];
+      newCard[2] = withFree;
     }
 
     setCardNumbers(newCard);
@@ -149,17 +239,22 @@ const BingoCardGenerator: React.FC<{ maxNumber: number }> = ({ maxNumber }) => {
     generateCard();
   }, [maxNumber]);
 
+  const gridStyle = {
+    gridTemplateRows: `repeat(${rows}, 1fr)`,
+    gridAutoFlow: 'column' as const
+  };
+
   return (
     <div className="bingo-card-container">
       <div className="bingo-card-header">
         <h2>BINGO (1-{maxNumber})</h2>
       </div>
-      <div className="bingo-card-grid">
-        {Array.from({ length: 5 }).map((_, rowIndex) => (
+      <div className="bingo-card-grid" style={gridStyle}>
+        {Array.from({ length: rows }).map((_, rowIndex) => (
           cardNumbers.length > 0 && cardNumbers.map((col, colIndex) => (
             <div
               key={`${rowIndex}-${colIndex}`}
-              className={`bingo-card-cell ${rowIndex === 2 && colIndex === 2 ? 'free-space' : ''}`}
+              className={`bingo-card-cell ${rows % 2 !== 0 && rows >= 3 && rowIndex === Math.floor(rows / 2) && colIndex === 2 ? 'free-space' : ''}`}
             >
               {col ? col[rowIndex] : ''}
             </div>
@@ -182,6 +277,7 @@ const App: React.FC = () => {
   const [currentNumber, setCurrentNumber] = useState<number | null>(null);
   const [callName, setCallName] = useState("");
   const [calledNumbers, setCalledNumbers] = useState<number[]>([]);
+  const [history, setHistory] = useState<number[]>([]);
   const [gameComplete, setGameComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<'caller' | 'card'>('caller');
 
@@ -195,9 +291,12 @@ const App: React.FC = () => {
     const nextNum = generateNextNumber(calledNumbers, maxNumber);
 
     if (nextNum !== null) {
+      const name = getBingoCallName(nextNum);
+
       setCurrentNumber(nextNum);
-      setCallName(getBingoCallName(nextNum));
+      setCallName(name);
       setCalledNumbers(prev => [...prev, nextNum]);
+      setHistory(prev => [nextNum, ...prev]);
 
       if (calledNumbers.length + 1 === maxNumber) {
         setGameComplete(true);
@@ -209,6 +308,7 @@ const App: React.FC = () => {
     setCurrentNumber(null);
     setCallName("");
     setCalledNumbers([]);
+    setHistory([]);
     setGameComplete(false);
   };
 
@@ -229,13 +329,17 @@ const App: React.FC = () => {
             Printable Card
           </button>
         </div>
-        <SettingsPanel maxNumber={maxNumber} onMaxNumberChange={handleMaxNumberChange} />
+        <SettingsPanel
+          maxNumber={maxNumber}
+          onMaxNumberChange={handleMaxNumberChange}
+        />
       </div>
 
       {activeTab === 'caller' ? (
         <div className="game-container">
           <div className="main-area">
             <NumberDisplay currentNumber={currentNumber} callName={callName} />
+            <HistoryDisplay history={history.slice(1)} />
             <div className="button-container">
               <NextButton onClick={handleNextNumber} disabled={gameComplete} />
               {calledNumbers.length > 0 && <ResetButton onClick={handleReset} />}
