@@ -25,3 +25,7 @@ dist-ssr
 
 # Vite cache
 .vite
+
+# CDK
+infra/cdk.out/
+infra/.cdk.staging/
