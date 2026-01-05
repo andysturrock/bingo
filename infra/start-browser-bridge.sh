@@ -15,9 +15,8 @@ PROXY_SCRIPT="C:\temp\proxy.py"
 echo "🚀 Starting WSL2 Browser Bridge..."
 echo "📍 Host IP detected: $HOST_IP"
 
-# 2. Kill existing Chrome and Proxy processes on Windows
-echo "🧹 Cleaning up existing Windows browser processes..."
-powershell.exe -Command "Stop-Process -Name chrome -Force -ErrorAction SilentlyContinue"
+# 2. Kill only existing Proxy processes on Windows (to free up port 9223)
+echo "🧹 Cleaning up existing bridge processes..."
 powershell.exe -Command "Get-Process python | Where-Object { \$_.CommandLine -like '*proxy.py*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
 
 # 3. Launch Chrome on Windows
