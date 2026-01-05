@@ -9,6 +9,7 @@ A modern, professional Bingo Number Caller application built with React, Vite, a
 -   **Printable Cards**: Generate and print unique 5x5 Bingo cards with a "FREE" space in the center.
 -   **Modern Design**: Vibrant, glassmorphism-inspired UI with smooth animations and responsive layout.
 -   **TypeScript Driven**: Fully typed codebase for reliability and maintainability.
+-   **WSL2 Integration**: Supports advanced agentic coding via the [wsl2-browser-bridge](https://github.com/andysturrock/wsl2-browser-bridge).
 
 ## Tech Stack
 
