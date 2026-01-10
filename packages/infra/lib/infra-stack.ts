@@ -105,7 +105,7 @@ export class InfraStack extends cdk.Stack {
 
     // S3 Bucket Deployment
     new s3deploy.BucketDeployment(this, 'DeployWithInvalidation', {
-      sources: [s3deploy.Source.asset(path.join(__dirname, '../../dist'))],
+      sources: [s3deploy.Source.asset(path.join(__dirname, '../../web/dist'))],
       destinationBucket: siteBucket,
       distribution,
       distributionPaths: ['/*'],
