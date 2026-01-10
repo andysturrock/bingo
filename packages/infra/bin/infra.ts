@@ -11,7 +11,7 @@ if (!domainName) {
   throw new Error('Please provide "domainName" via context, e.g., -c domainName=bingo.sturrock.org');
 }
 
-const certStack = new CertificateStack(app, 'BingoCertificateStack', {
+new CertificateStack(app, 'BingoCertificateStack', {
   env: { account: '636099490084', region: 'us-east-1' },
   domainName,
 });
