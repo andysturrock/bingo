@@ -11,12 +11,16 @@ if (!domainName) {
   throw new Error('Please provide "domainName" via context, e.g., -c domainName=DOMAIN_NAME_PLACEHOLDER');
 }
 
+const account = process.env.CDK_DEFAULT_ACCOUNT || app.node.tryGetContext('account');
+const region = process.env.CDK_DEFAULT_REGION || app.node.tryGetContext('region');
+const certRegion = app.node.tryGetContext('certRegion') || 'us-east-1';
+
 new CertificateStack(app, 'BingoCertificateStack', {
-  env: { account: 'AWS_ACCOUNT_ID_PLACEHOLDER', region: 'us-east-1' },
+  env: { account, region: certRegion },
   domainName,
 });
 
 new InfraStack(app, 'BingoInfraStack', {
-  env: { account: 'AWS_ACCOUNT_ID_PLACEHOLDER', region: 'eu-west-2' },
+  env: { account, region },
   domainName,
 });
