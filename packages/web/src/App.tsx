@@ -27,7 +27,7 @@ const bingoCallNames: Record<number, string> = {
   89: "Nearly There", 90: "Top of the Shop"
 };
 
-const generateNextNumber = (calledNumbers: number[], maxNumber: number): number | null => {
+export const generateNextNumber = (calledNumbers: number[], maxNumber: number): number | null => {
   const availableNumbers = Array.from({ length: maxNumber }, (_, i) => i + 1)
     .filter(num => !calledNumbers.includes(num));
 
@@ -37,15 +37,15 @@ const generateNextNumber = (calledNumbers: number[], maxNumber: number): number 
   return availableNumbers[randomIndex];
 };
 
-const getBingoCallName = (number: number) => bingoCallNames[number] || "";
+export const getBingoCallName = (number: number) => bingoCallNames[number] || "";
 
 const NumberDisplay: React.FC<{ currentNumber: number | null, callName: string }> = ({ currentNumber, callName }) => (
   <div className="number-display">
     <div className="number-display-label">Current Number</div>
     {currentNumber ? (
       <React.Fragment>
-        <div className="current-number" key={currentNumber}>{currentNumber}</div>
-        <div className="call-name" key={`${currentNumber}-name`}>{callName}</div>
+        <div className="current-number" data-testid="current-number" key={currentNumber}>{currentNumber}</div>
+        <div className="call-name" data-testid="call-name" key={`${currentNumber}-name`}>{callName}</div>
       </React.Fragment>
     ) : (
       <div className="placeholder-text">Click "Next Number" to start!</div>
